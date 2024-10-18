@@ -1,45 +1,34 @@
+use ratatui::crossterm::event::DisableMouseCapture;
+use ratatui::crossterm::event::EnableMouseCapture;
+use ratatui::crossterm::execute;
+use ratatui::crossterm::terminal::{disable_raw_mode, LeaveAlternateScreen};
+use ratatui::crossterm::terminal::{enable_raw_mode, EnterAlternateScreen};
 use std::io;
 
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{
-    buffer::Buffer,
-    layout::{Alignment, Rect},
-    style::Stylize,
-    symbols::border,
-    text::{Line, Text},
-    widgets::{
-        block::{Position, Title},
-        Block, Paragraph, Widget,
-    },
-    DefaultTerminal, Frame,
-};
+fn main() -> Result<(), Box<dyn Error>> {
+    // setup terminal
+    enable_raw_mode()?;
+    let mut stderr = io::stderr(); // This is a special case. Normally using stdout is fine
+    execute!(stderr, EnterAlternateScreen, EnableMouseCapture)?;
 
-#[derive(Debug, Default)]
-pub struct App {
-    exit: bool,
-}
+    let backend = CrossTermBackend::new(stderr);
+    let mut terminal = Terminal::new(backend)?;
 
-fn main() -> io::Result<()> {
-    let mut terminal = ratatui::init();
-    let app_result = App::default().run(&mut terminal);
-    ratatui::restore();
-    app_result
-}
+    let mut app = App::new();
+    let res = run_app(&mut terminal, &mut app);
 
-impl App {
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
-        while !self.exit {
-            terminal.draw(|frame| self.draw(frame))?;
-            self.handle_events()?;
+    disable_raw_mode()?;
+
+    execute!(terminal.backend, LeaveAlternateScreen, DisableMouseCapture)?;
+    terminal.show_cursor()?;
+
+    if let Ok(do_print) = res {
+        if do_print {
+            print_pairs(&app.pairs);
         }
-        Ok(())
+    } else if let Err(e) = res {
+        println!("{err:?}");
     }
-
-    fn draw(&self, frame: &mut Frame) {
-        todo!()
-    }
-
-    fn handle_events(&mut self) -> io::Result<()> {
-        todo!()
-    }
+    Ok(())
 }
+
