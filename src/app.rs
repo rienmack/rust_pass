@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 pub enum CurrentScreen {
     Main,
     Editing,
@@ -13,7 +15,7 @@ pub enum CurrentlyEditing {
 pub struct App {
     pub key_input: String,
     pub value_input: String,
-    pub pair: HashMap<String, String>,
+    pub pairs: HashMap<String, String>,
     pub current_screen: CurrentScreen,
     pub currently_editing: Option<CurrentlyEditing>,
 }
@@ -23,7 +25,7 @@ impl App {
         App {
             key_input: String::new(),
             value_input: String::new(),
-            pair: HashMap::new(),
+            pairs: HashMap::new(),
             current_screen: CurrentScreen::Login,
             currently_editing: None,
         }
@@ -39,7 +41,7 @@ impl App {
     }
 
     pub fn toggle_editing(&mut self) {
-        if let Some(edit_mode) = self.currently_editing {
+        if let Some(edit_mode) = &self.currently_editing {
             self.currently_editing = match edit_mode {
                 CurrentlyEditing::Key => Some(CurrentlyEditing::Value),
                 CurrentlyEditing::Value => Some(CurrentlyEditing::Key),
